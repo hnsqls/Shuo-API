@@ -173,7 +173,6 @@ const TableList: React.FC = () => {
       dataIndex: 'option',
       valueType: 'option',
       render: (_, record) => [
-      
         <Switch
           key="status"
           checkedChildren="开启"
@@ -196,7 +195,28 @@ const TableList: React.FC = () => {
               message.error('操作失败，请重试');
             }
           }}
-        />
+        />,
+        <Button
+          key="delete"
+          type="text"
+          danger
+          onClick={async () => {
+            const hide = message.loading('正在删除');
+            try {
+              await deleteInterfaceInfoUsingPost({
+                id: record.id,  // 修改这里：直接传递单个id而不是数组
+              });
+              hide();
+              message.success('删除成功');
+              actionRef.current?.reload();
+            } catch (error) {
+              hide();
+              message.error('删除失败，请重试');
+            }
+          }}
+        >
+          删除
+        </Button>
       ],
     },
     {
@@ -378,6 +398,102 @@ const TableList: React.FC = () => {
           name="name"
         />
         <ProFormTextArea width="md" name="desc" />
+      </ModalForm>
+      <UpdateForm
+        onSubmit={async (value) => {
+          const success = await handleUpdate(value);
+          if (success) {
+            handleUpdateModalOpen(false);
+            setCurrentRow(undefined);
+            if (actionRef.current) {
+              actionRef.current.reload();
+            }
+          }
+        }}
+        onCancel={() => {
+          handleUpdateModalOpen(false);
+          if (!showDetail) {
+            setCurrentRow(undefined);
+          }
+        }}
+        updateModalOpen={updateModalOpen}
+        values={currentRow || {}}
+      />
+
+      <Drawer
+        width={600}
+        open={showDetail}
+        onClose={() => {
+          setCurrentRow(undefined);
+          setShowDetail(false);
+        }}
+        closable={false}
+      >
+        {currentRow?.name && (
+          <ProDescriptions<API.RuleListItem>
+            column={2}
+            title={currentRow?.name}
+            request={async () => ({
+              data: currentRow || {},
+            })}
+            params={{
+              id: currentRow?.name,
+            }}
+            columns={columns as ProDescriptionsItemProps<API.RuleListItem>[]}
+          />
+        )}
+      </Drawer>
+      <ModalForm
+        title={'新建接口'}
+        width="400px"
+        open={createModalOpen}
+        onOpenChange={handleModalOpen}
+        onFinish={async (value) => {
+          const success = await handleAdd(value as API.InterfaceInfoAddRequest);
+          if (success) {
+            handleModalOpen(false);
+            if (actionRef.current) {
+              actionRef.current.reload();
+            }
+          }
+        }}
+      >
+        <ProFormText
+          rules={[
+            {
+              required: true,
+              message: '接口名称为必填项',
+            },
+          ]}
+          width="md"
+          name="name"
+          label="接口名称"
+        />
+        <ProFormTextArea width="md" name="description" label="接口描述" />
+        <ProFormText 
+          rules={[
+            {
+              required: true,
+              message: '接口地址为必填项',
+            },
+          ]}
+          width="md" 
+          name="url" 
+          label="接口地址" 
+        />
+        <ProFormText 
+          rules={[
+            {
+              required: true,
+              message: '请求方法为必填项',
+            },
+          ]}
+          width="md" 
+          name="method" 
+          label="请求方法" 
+        />
+        <ProFormTextArea width="md" name="requestHeader" label="请求头" />
+        <ProFormTextArea width="md" name="responseHeader" label="响应头" />
       </ModalForm>
       <UpdateForm
         onSubmit={async (value) => {
