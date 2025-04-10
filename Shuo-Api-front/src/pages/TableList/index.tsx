@@ -11,20 +11,21 @@ import {
   ProTable,
 } from '@ant-design/pro-components';
 import '@umijs/max';
-import { Button, Drawer, Input, message } from 'antd';
+import { Button, Drawer, message, Switch } from 'antd';
 import React, { useRef, useState } from 'react';
 import type { FormValueType } from './components/UpdateForm';
 import UpdateForm from './components/UpdateForm';
+import { addInterfaceInfoUsingPost, deleteInterfaceInfoUsingPost, listInterfaceInfoByPageUsingPost, updateInterfaceInfoUsingPost } from '@/services/shuoapi-backend/interfaceInfoController';
 
 /**
  * @en-US Add node
  * @zh-CN 添加节点
  * @param fields
  */
-const handleAdd = async (fields: API.RuleListItem) => {
+const handleAdd = async (fields: API.InterfaceInfoAddRequest) => {
   const hide = message.loading('正在添加');
   try {
-    await addRule({
+    await addInterfaceInfoUsingPost({
       ...fields,
     });
     hide();
@@ -43,13 +44,11 @@ const handleAdd = async (fields: API.RuleListItem) => {
  *
  * @param fields
  */
-const handleUpdate = async (fields: FormValueType) => {
+const handleUpdate = async (fields: API.InterfaceInfoUpdateRequest) => {
   const hide = message.loading('Configuring');
   try {
-    await updateRule({
-      name: fields.name,
-      desc: fields.desc,
-      key: fields.key,
+    await updateInterfaceInfoUsingPost({
+      ...fields,
     });
     hide();
     message.success('Configuration is successful');
@@ -67,12 +66,12 @@ const handleUpdate = async (fields: FormValueType) => {
  *
  * @param selectedRows
  */
-const handleRemove = async (selectedRows: API.RuleListItem[]) => {
+const handleRemove = async (selectedRows: API.DeleteRequest[]) => {
   const hide = message.loading('正在删除');
   if (!selectedRows) return true;
   try {
-    await removeRule({
-      key: selectedRows.map((row) => row.key),
+    await deleteInterfaceInfoUsingPost({
+      id: selectedRows.map((row) => row.id),
     });
     hide();
     message.success('Deleted successfully and will refresh soon');
@@ -106,9 +105,9 @@ const TableList: React.FC = () => {
 
   const columns: ProColumns<API.RuleListItem>[] = [
     {
-      title: '规则名称',
+      title: '名称',
       dataIndex: 'name',
-      tip: 'The rule name is the unique key',
+      tip: '接口名称',
       render: (dom, entity) => {
         return (
           <a
@@ -124,69 +123,88 @@ const TableList: React.FC = () => {
     },
     {
       title: '描述',
-      dataIndex: 'desc',
+      dataIndex: 'description',
       valueType: 'textarea',
     },
     {
-      title: '服务调用次数',
-      dataIndex: 'callNo',
-      sorter: true,
+      title: '接口地址',
+      dataIndex: 'url',
       hideInForm: true,
-      renderText: (val: string) => `${val}${'万'}`,
+    },
+    {
+      title: '请求类型',
+      dataIndex: 'method',
+      hideInForm: true,
+      valueEnum: {
+        GET: { text: 'GET' },
+        POST: { text: 'POST' },
+        PUT: { text: 'PUT' },
+        DELETE: { text: 'DELETE' },
+      },
     },
     {
       title: '状态',
       dataIndex: 'status',
-      hideInForm: true,
       valueEnum: {
         0: {
           text: '关闭',
           status: 'Default',
         },
         1: {
-          text: '运行中',
+          text: '开启',
           status: 'Processing',
-        },
-        2: {
-          text: '已上线',
-          status: 'Success',
-        },
-        3: {
-          text: '异常',
-          status: 'Error',
         },
       },
     },
     {
-      title: '上次调度时间',
-      sorter: true,
-      dataIndex: 'updatedAt',
+      title: '创建时间',
+      dataIndex: 'createTime',
       valueType: 'dateTime',
-      renderFormItem: (item, { defaultRender, ...rest }, form) => {
-        const status = form.getFieldValue('status');
-        if (`${status}` === '0') {
-          return false;
-        }
-        if (`${status}` === '3') {
-          return <Input {...rest} placeholder={'请输入异常原因！'} />;
-        }
-        return defaultRender(item);
-      },
+      hideInForm: true,
+    },
+    {
+      title: '更新时间',
+      dataIndex: 'updateTime',
+      valueType: 'dateTime',
+      hideInForm: true,
     },
     {
       title: '操作',
       dataIndex: 'option',
       valueType: 'option',
       render: (_, record) => [
-        <a
-          key="config"
-          onClick={() => {
-            handleUpdateModalOpen(true);
-            setCurrentRow(record);
+      
+        <Switch
+          key="status"
+          checkedChildren="开启"
+          unCheckedChildren="关闭"
+          checked={record.status === 1}
+          onChange={async (checked) => {
+            const hide = message.loading('正在' + (checked ? '开启' : '关闭'));
+            try {
+              await updateInterfaceInfoUsingPost({
+                id: record.id,
+                status: checked ? 1 : 0,
+              });
+              hide();
+              message.success('操作成功');
+              if (actionRef.current) {
+                actionRef.current.reload();
+              }
+            } catch (error) {
+              hide();
+              message.error('操作失败，请重试');
+            }
           }}
-        >
-          配置
-        </a>,
+        />
+      ],
+    },
+    {
+      title: '订阅警报',
+      dataIndex: 'subscribeAlert',
+      key: 'subscribeAlert',
+      valueType: 'option',
+      render: (_, record) => [
         <a key="subscribeAlert" href="https://procomponents.ant.design/">
           订阅警报
         </a>,
@@ -195,10 +213,70 @@ const TableList: React.FC = () => {
   ];
   return (
     <PageContainer>
-      <ProTable<API.RuleListItem, API.PageParams>
-        headerTitle={'查询表格'}
+      <ModalForm
+        title={'新建规则'}
+        width="400px"
+        open={createModalOpen}
+        onOpenChange={handleModalOpen}
+        onFinish={async (value) => {
+          const success = await handleAdd(value as API.RuleListItem);
+          if (success) {
+            handleModalOpen(false);
+            if (actionRef.current) {
+              actionRef.current.reload();
+            }
+          }
+        }}
+      />
+
+      <UpdateForm
+        onSubmit={async (value) => {
+          const success = await handleUpdate(value);
+          if (success) {
+            handleUpdateModalOpen(false);
+            setCurrentRow(undefined);
+            if (actionRef.current) {
+              actionRef.current.reload();
+            }
+          }
+        }}
+        onCancel={() => {
+          handleUpdateModalOpen(false);
+          if (!showDetail) {
+            setCurrentRow(undefined);
+          }
+        }}
+        updateModalOpen={updateModalOpen}
+        values={currentRow || {}}
+      />
+
+      <Drawer
+        width={600}
+        open={showDetail}
+        onClose={() => {
+          setCurrentRow(undefined);
+          setShowDetail(false);
+        }}
+        closable={false}
+      >
+        {currentRow?.name && (
+          <ProDescriptions<API.RuleListItem>
+            column={2}
+            title={currentRow?.name}
+            request={async () => ({
+              data: currentRow || {},
+            })}
+            params={{
+              id: currentRow?.name,
+            }}
+            columns={columns as ProDescriptionsItemProps<API.RuleListItem>[]}
+          />
+        )}
+      </Drawer>
+      <ProTable<API.InterfaceInfo, API.InterfaceInfoQueryRequest>
+        headerTitle={'接口信息表'}
         actionRef={actionRef}
-        rowKey="key"
+        rowKey="id"
         search={{
           labelWidth: 120,
         }}
@@ -213,7 +291,29 @@ const TableList: React.FC = () => {
             <PlusOutlined /> 新建
           </Button>,
         ]}
-        request={rule}
+        request={async (params, sort, filter) => {
+          const res = await listInterfaceInfoByPageUsingPost({
+            ...params,
+            // @ts-ignore
+            sortField: sort?.field,
+            // @ts-ignore
+            sortOrder: sort?.order,
+            ...filter,
+          });
+          if (res?.data) {
+            return {
+              data: res?.data.records || [],
+              success: true,
+              total: res?.data.total || 0,
+            };
+          } else {
+            return {
+              data: [],
+              success: false,
+              total: 0,
+            };
+          }
+        }}
         columns={columns}
         rowSelection={{
           onChange: (_, selectedRows) => {
