@@ -11,10 +11,10 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 class ShuoApiClientTest {
 
-    @Resource
-    private ShuoApiClient shuoApiClient;
+
     @Test
     void getUserByGet() {
+        ShuoApiClient shuoApiClient = new ShuoApiClient("hnsqls", "hnsqls");
         String result1 = shuoApiClient.getUserByGet("hnsqls");
         String result2 = shuoApiClient.getUserByPost("hnsqls");
         String result3 = shuoApiClient.getUserByJson(new User("hnsqls", "123456"));

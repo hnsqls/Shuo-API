@@ -12,24 +12,51 @@ import java.util.HashMap;
 /**
  * 调用接口的客户端
  */
-@Component
 public class ShuoApiClient {
+    private String accessKey;
+    private String secretKey;
 
-    public String getUserByGet(String name){
-        return HttpUtil.get("http://localhost:8849/api/user/name/" + name);
+    /**
+     * 添加请求头信息
+     *
+     * @return
+     */
+    private HashMap<String, String> getHeaderMap() {
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("accessKey", accessKey);
+        headers.put("secretKey", secretKey);
+        return headers;
     }
 
-    public String getUserByPost(String name){
+    // 添加构造方法
+    public ShuoApiClient(String accessKey, String secretKey) {
+        this.accessKey = accessKey;
+        this.secretKey = secretKey;
+    }
+
+    public String getUserByGet(String name) {
+        return HttpRequest.get("http://localhost:8849/api/user/name/" + name)
+                .addHeaders(getHeaderMap())
+                .execute()
+                .body();
+    }
+
+    public String getUserByPost(String name) {
         HashMap<String, Object> paramMap = new HashMap<>();
         paramMap.put("name", name);
-        return HttpUtil.post("http://localhost:8849/api/user/name", paramMap);
+        return HttpRequest.post("http://localhost:8849/api/user/name")
+                .addHeaders(getHeaderMap())
+                .form(paramMap)
+                .execute()
+                .body();
     }
 
     public String getUserByJson(User user) {
         String json = JSONUtil.toJsonStr(user);
-        HttpResponse execute = HttpRequest.post("http://localhost:8849/api/user/json")
+        return HttpRequest.post("http://localhost:8849/api/user/json")
+                .addHeaders(getHeaderMap())
                 .body(json)
-                .execute();
-        return execute.body();
+                .execute()
+                .body();
     }
 }
