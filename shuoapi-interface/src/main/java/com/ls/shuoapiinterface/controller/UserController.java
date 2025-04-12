@@ -1,5 +1,6 @@
 package com.ls.shuoapiinterface.controller;
 
+import com.ls.shuoapiinterface.client.ShuoApiClient;
 import com.ls.shuoapiinterface.model.User;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,8 +16,16 @@ public class UserController {
     @GetMapping("/name/{name}")
     public String getUserByGet(@PathVariable String name, HttpServletRequest request){
         String accessKey = request.getHeader("accessKey");
-        String secretKey = request.getHeader("secretKey");
-        if (!Objects.equals(accessKey, "hnsqls") || !Objects.equals(secretKey, "hnsqls")) {
+        String sign = request.getHeader("sign");
+
+        // todo  查数据库根据accessKey 查secretKey
+        String secretKey = "hnsqls";// 模拟了先
+        if (secretKey == null || accessKey.isEmpty()){
+            return "accessKey or secretKey is wrong";
+        }
+
+        String checkSign = ShuoApiClient.getSign(accessKey,secretKey);
+        if (!Objects.equals(accessKey, "hnsqls") || !Objects.equals(sign, checkSign)) {
             return "accessKey or secretKey is wrong";
         }
 
@@ -26,8 +35,16 @@ public class UserController {
     @PostMapping("/name")
     public String getUserByPost(@RequestParam String name,HttpServletRequest request){
         String accessKey = request.getHeader("accessKey");
-        String secretKey = request.getHeader("secretKey");
-        if (!Objects.equals(accessKey, "hnsqls") || !Objects.equals(secretKey, "hnsqls")) {
+        String sign = request.getHeader("sign");
+
+        // todo  查数据库根据accessKey 查secretKey
+        String secretKey = "hnsqls";// 模拟了先
+        if (secretKey == null || accessKey.isEmpty()){
+            return "accessKey or secretKey is wrong";
+        }
+
+        String checkSign = ShuoApiClient.getSign(accessKey,secretKey);
+        if (!Objects.equals(accessKey, "hnsqls") || !Objects.equals(sign, checkSign)) {
             return "accessKey or secretKey is wrong";
         }
         return "POST:hello " + name;
@@ -36,8 +53,16 @@ public class UserController {
     @PostMapping("/json")
     public String getUserByJson(@RequestBody User user,HttpServletRequest request) {
         String accessKey = request.getHeader("accessKey");
-        String secretKey = request.getHeader("secretKey");
-        if (!Objects.equals(accessKey, "hnsqls") || !Objects.equals(secretKey, "hnsqls")) {
+        String sign = request.getHeader("sign");
+
+        // todo  查数据库根据accessKey 查secretKey
+        String secretKey = "hnsqls";// 模拟了先
+        if (secretKey == null || accessKey.isEmpty()){
+            return "accessKey or secretKey is wrong";
+        }
+
+        String checkSign = ShuoApiClient.getSign(accessKey,secretKey);
+        if (!Objects.equals(accessKey, "hnsqls") || !Objects.equals(sign, checkSign)) {
             return "accessKey or secretKey is wrong";
         }
         return "POST Json :hello " + user.getName();

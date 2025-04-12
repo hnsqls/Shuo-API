@@ -1,5 +1,8 @@
 package com.ls.shuoapiinterface.client;
 
+import cn.hutool.Hutool;
+import cn.hutool.crypto.digest.DigestAlgorithm;
+import cn.hutool.crypto.digest.Digester;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
@@ -13,8 +16,8 @@ import java.util.HashMap;
  * 调用接口的客户端
  */
 public class ShuoApiClient {
-    private String accessKey;
-    private String secretKey;
+    private   String accessKey;
+    private  String secretKey;
 
     /**
      * 添加请求头信息
@@ -24,9 +27,21 @@ public class ShuoApiClient {
     private HashMap<String, String> getHeaderMap() {
         HashMap<String, String> headers = new HashMap<>();
         headers.put("accessKey", accessKey);
-        headers.put("secretKey", secretKey);
+//        headers.put("secretKey", secretKey); 不能直接暴露
+        headers.put("sign", getSign(accessKey,secretKey)); // 签名认证
         return headers;
     }
+
+    public  static String getSign(String accessKey,String secretKey){
+//        （accessKey+secretKey + userid + 盐）
+        String SALT = "hnsqls";
+
+        String sign = accessKey + SALT+ secretKey;
+        // sha 256加密
+        Digester sha256 = new Digester(DigestAlgorithm.SHA256);
+        return sha256.digestHex(sign);
+    }
+
 
     // 添加构造方法
     public ShuoApiClient(String accessKey, String secretKey) {
