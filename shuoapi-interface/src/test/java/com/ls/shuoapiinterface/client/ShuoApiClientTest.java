@@ -1,12 +1,8 @@
 package com.ls.shuoapiinterface.client;
 
 import com.ls.shuoapiinterface.model.User;
-import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.web.bind.annotation.RequestParam;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 class ShuoApiClientTest {

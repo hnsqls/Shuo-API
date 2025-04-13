@@ -1,7 +1,8 @@
 package com.ls.shuoapiinterface.controller;
 
-import com.ls.shuoapiinterface.client.ShuoApiClient;
+import com.ls.shuoapiclientsdk.client.ShuoApiClient;
 import com.ls.shuoapiinterface.model.User;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +13,14 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/user")
 public class UserController {
+
+    @Resource
+    private ShuoApiClient shuoApiClient;
+    @GetMapping("/test")
+    public String test(){
+        return shuoApiClient.getUserByGet("hnsqls");
+
+    }
 
     @GetMapping("/name/{name}")
     public String getUserByGet(@PathVariable String name, HttpServletRequest request){

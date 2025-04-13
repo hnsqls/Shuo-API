@@ -72,6 +72,14 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!--        自定义的stater 调用服务客户端-->
+        <dependency>
+            <groupId>com.ls</groupId>
+            <artifactId>shuoapi-client-sdk</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+
     </dependencies>
 
     <build>

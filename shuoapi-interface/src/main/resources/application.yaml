@@ -2,3 +2,8 @@ server:
   port: 8849
   servlet:
     context-path: /api
+
+shuo:
+  api:
+    access-key: hnsqls
+    secret-key: hnsqls

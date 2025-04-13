@@ -1,16 +1,21 @@
-package com.ls.shuoapiinterface.client;
+package com.ls.shuoapiclientsdk.client;
 
 import cn.hutool.crypto.digest.DigestAlgorithm;
 import cn.hutool.crypto.digest.Digester;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONUtil;
-import com.ls.shuoapiinterface.model.User;
+import com.ls.shuoapiclientsdk.model.User;
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 
 import java.util.HashMap;
 
 /**
  * 调用接口的客户端
  */
+
 public class ShuoApiClient {
     private   String accessKey;
     private  String secretKey;
