@@ -19,6 +19,7 @@ import com.ls.shuoapi.model.entity.User;
 
 import com.ls.shuoapi.service.InterfaceInfoService;
 import com.ls.shuoapi.service.UserService;
+import com.ls.shuoapiclientsdk.client.ShuoApiClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -41,6 +42,8 @@ public class InterfaceInfoController {
 
     @Resource
     private UserService userService;
+
+    @Resource private ShuoApiClient shuoApiClient;
 
     // region 增删改查
 
@@ -101,7 +104,7 @@ public class InterfaceInfoController {
     }
 
     /**
-     * 更新（仅管理员）
+     * 更新（仅管理员） - 修改接口信息， 下线接口， 发布接口信息
      * @param interfaceInfoUpdateRequest
      * @return
      */
@@ -121,6 +124,20 @@ public class InterfaceInfoController {
         // 判断是否存在
         InterfaceInfo oldInterfaceInfo = interfaceInfoService.getById(id);
         ThrowUtils.throwIf(oldInterfaceInfo == null, ErrorCode.NOT_FOUND_ERROR);
+
+        int status = interfaceInfo.getStatus();
+        // 如果是正常修改接口的信息，或者就是下线
+
+        // 如果是发布 state = 1
+        if (status == 1){
+
+            // 该接口是否正常使用 todo 根据接口的uri，来测试远程调用哪一个接口
+            String userByJson = shuoApiClient.getUserByJson(new com.ls.shuoapiclientsdk.model.User("hnsqls", "hello"));
+            if (StringUtils.isBlank(userByJson)){
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口调用失败");
+            }
+
+        }
         boolean result = interfaceInfoService.updateById(interfaceInfo);
         return ResultUtils.success(result);
     }

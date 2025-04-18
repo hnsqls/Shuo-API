@@ -98,3 +98,9 @@ knife4j:
         api-rule: package
         api-rule-resources:
           - com.ls.shuoapi.controller
+
+
+shuo:
+  api:
+    access-key: hnsqls
+    secret-key: hnsqls
