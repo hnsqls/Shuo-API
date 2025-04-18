@@ -81,7 +81,12 @@ const Welcome: React.FC = () => {
             >
               开始使用
             </Button>
-            <Button size="large">查看文档</Button>
+            <Button 
+            size="large"
+            onClick={() => {
+              window.open('https://github.com/hnsqls/Shuo-API');
+            }}
+            >查看文档</Button>
           </div>
         </div>
         {/* 右侧优势卡片 */}

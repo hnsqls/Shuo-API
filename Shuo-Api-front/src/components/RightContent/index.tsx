@@ -1,4 +1,4 @@
-import { QuestionCircleOutlined } from '@ant-design/icons';
+import { BookOutlined } from '@ant-design/icons';
 import '@umijs/max';
 export type SiderTheme = 'light' | 'dark';
 export const Question = () => {
@@ -6,13 +6,19 @@ export const Question = () => {
     <div
       style={{
         display: 'flex',
+        alignItems: 'center',
         height: 26,
+        cursor: 'pointer',
+        color: '#666',
+        fontSize: 16,
+        gap: 6,
       }}
       onClick={() => {
-        window.open('https://pro.ant.design/docs/getting-started');
+        window.open('https://github.com/hnsqls/Shuo-API');
       }}
     >
-      <QuestionCircleOutlined />
+      <BookOutlined style={{ fontSize: 16, color: '#8ecae6' }} />
+      <span>开发者文档</span>
     </div>
   );
 };
