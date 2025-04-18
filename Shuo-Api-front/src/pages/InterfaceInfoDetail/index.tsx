@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Card, Descriptions, Tabs, Table, Typography, Spin, message } from 'antd';
+import { Card, Descriptions, Tabs, Table, Typography, Spin, message, Button } from 'antd';
 import { getInterfaceInfoVoByIdUsingGet } from '@/services/shuoapi-backend/interfaceInfoController';
+import { Form, Input, Select, Space, message as antdMessage } from 'antd';
+import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 
 const { Title, Paragraph } = Typography;
 
@@ -9,12 +11,28 @@ const InterfaceInfoDetail: React.FC = () => {
   const { id } = useParams();
   const [info, setInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [paramsTable, setParamsTable] = useState<{ key: string; name: string; value: string }[]>([]);
+  const [method, setMethod] = useState('GET');
+  const [url, setUrl] = useState('');
+  const [testLoading, setTestLoading] = useState(false);
+  const [testResult, setTestResult] = useState<any>(null);
 
   useEffect(() => {
     if (id) {
       getInterfaceInfoVoByIdUsingGet({ id })
         .then(res => {
           setInfo(res?.data);
+          // 初始化参数表格
+          const reqParams = res?.data?.requestParams || [];
+          setParamsTable(
+            reqParams.map((p: any, idx: number) => ({
+              key: String(idx),
+              name: p.name,
+              value: '',
+            }))
+          );
+          setMethod(res?.data?.method || 'GET'); // 动态设置method
+          setUrl(res?.data?.url || '');          // 动态设置url
         })
         .catch(() => {
           message.error('获取接口详情失败');
@@ -22,6 +40,33 @@ const InterfaceInfoDetail: React.FC = () => {
         .finally(() => setLoading(false));
     }
   }, [id]);
+
+  // 添加一行参数
+  const addParamRow = () => {
+    setParamsTable([...paramsTable, { key: Date.now().toString(), name: '', value: '' }]);
+  };
+
+  // 删除一行参数
+  const removeParamRow = (key: string) => {
+    setParamsTable(paramsTable.filter(row => row.key !== key));
+  };
+
+  // 修改参数
+  const updateParam = (key: string, field: 'name' | 'value', val: string) => {
+    setParamsTable(paramsTable.map(row => row.key === key ? { ...row, [field]: val } : row));
+  };
+
+  // 重置参数
+  const resetParams = () => {
+    setParamsTable(
+      (info.requestParams || []).map((p: any, idx: number) => ({
+        key: String(idx),
+        name: p.name,
+        value: '',
+      }))
+    );
+    setTestResult(null);
+  };
 
   if (loading) return <Spin style={{ marginTop: 100 }} />;
 
@@ -36,6 +81,44 @@ const InterfaceInfoDetail: React.FC = () => {
     { name: 'data', type: 'object', desc: '返回数据' },
     { name: 'message', type: 'string', desc: '提示信息' },
   ];
+
+  // 在线调试提交
+  const handleTest = async () => {
+    if (!id) return;
+    setTestLoading(true);
+    setTestResult(null);
+    try {
+      // 构造参数对象
+      const paramsObj: Record<string, any> = {};
+      paramsTable.forEach((row) => {
+        if (row.name) paramsObj[row.name] = row.value;
+      });
+
+      let res;
+      // 根据 method 动态选择请求方式
+      if (method === 'GET') {
+        // 这里请替换为你的 GET 请求方法
+        res = await getInterfaceInfoVoByIdUsingGet({
+          id,
+          ...paramsObj,
+        });
+      } else if (method === 'POST') {
+        // 这里请替换为你的 POST 请求方法
+        // res = await postInterfaceInfo({ id, ...paramsObj });
+        res = { code: 0, data: null, message: 'POST请求示例（请替换为实际API）' };
+      } else {
+        // 其他请求类型可按需扩展
+        res = { code: 0, data: null, message: `暂不支持${method}请求，请补充实现` };
+      }
+
+      setTestResult(res);
+      antdMessage.success('调试成功');
+    } catch (e) {
+      setTestResult(e?.message || '调试失败');
+      antdMessage.error('调试失败');
+    }
+    setTestLoading(false);
+  };
 
   return (
     <div style={{ background: '#fafafa', minHeight: '100vh', padding: 24 }}>
@@ -88,7 +171,103 @@ const InterfaceInfoDetail: React.FC = () => {
             </pre>
           </Tabs.TabPane>
           <Tabs.TabPane tab="在线调试工具" key="test">
-            <div>这里可以放置在线调试表单或工具</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <Select value={method} style={{ width: 90 }} disabled>
+                <Select.Option value="GET">GET</Select.Option>
+                <Select.Option value="POST">POST</Select.Option>
+                <Select.Option value="PUT">PUT</Select.Option>
+                <Select.Option value="DELETE">DELETE</Select.Option>
+              </Select>
+              <Input
+                value={url}
+                style={{ flex: 1 }}
+                onChange={e => setUrl(e.target.value)}
+              />
+              <Button type="primary" loading={testLoading} onClick={handleTest}>
+                发起请求
+              </Button>
+            </div>
+            <div style={{ fontWeight: 500, margin: '16px 0 8px 0' }}>请求参数设置：</div>
+            <Table
+              dataSource={paramsTable}
+              pagination={false}
+              rowKey="key"
+              bordered
+              size="small"
+              style={{ marginBottom: 8 }}
+              columns={[
+                {
+                  title: '参数名称',
+                  dataIndex: 'name',
+                  render: (text, record) => (
+                    <Input
+                      value={text}
+                      placeholder="参数名"
+                      onChange={e => updateParam(record.key, 'name', e.target.value)}
+                    />
+                  ),
+                },
+                {
+                  title: '参数值',
+                  dataIndex: 'value',
+                  render: (text, record) => (
+                    <Input
+                      value={text}
+                      placeholder="参数值"
+                      onChange={e => updateParam(record.key, 'value', e.target.value)}
+                    />
+                  ),
+                },
+                {
+                  title: '操作',
+                  dataIndex: 'action',
+                  width: 60,
+                  render: (_, record) => (
+                    <Button
+                      icon={<DeleteOutlined />}
+                      danger
+                      size="small"
+                      onClick={() => removeParamRow(record.key)}
+                    />
+                  ),
+                },
+              ]}
+              locale={{
+                emptyText: (
+                  <div style={{ color: '#bbb', padding: 16 }}>
+                    暂无数据
+                  </div>
+                ),
+              }}
+            />
+            <div style={{ marginBottom: 16 }}>
+              <Button
+                type="dashed"
+                block
+                icon={<PlusOutlined />}
+                onClick={addParamRow}
+              >
+                添加一行数据
+              </Button>
+            </div>
+            <Button onClick={resetParams} style={{ marginBottom: 16 }} type="primary" ghost>
+              重置
+            </Button>
+            <div style={{ fontWeight: 500, margin: '16px 0 8px 0' }}>返回结果：</div>
+            <pre style={{
+              background: '#f6f8fa',
+              padding: 16,
+              borderRadius: 6,
+              minHeight: 80,
+              fontFamily: 'monospace',
+              fontSize: 14,
+            }}>
+              {testResult
+                ? (typeof testResult === 'object'
+                  ? JSON.stringify(testResult, null, 2)
+                  : String(testResult))
+                : ''}
+            </pre>
           </Tabs.TabPane>
           <Tabs.TabPane tab="返回示例" key="example">
             <pre style={{ background: '#f6f8fa', padding: 16, borderRadius: 6 }}>
