@@ -1,3 +1,6 @@
+import { layout } from "@/app";
+import { Layout } from "antd";
+
 export default [
   {
     path: '/user',
