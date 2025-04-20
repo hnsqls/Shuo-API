@@ -6,38 +6,39 @@ use shuo_api;
 
 
 
-INSERT INTO `interface_info` (`name`, `description`, `url`, `requestHeader`, `responseHeader`, `status`, `method`, `userId`, `createTime`, `updateTime`, `isDelete`) VALUES
--- 开启状态的接口 (status=1)
-('用户登录', '通过账号密码获取访问令牌', '/api/user/login', '{"Content-Type":"application/json"}', '{"Content-Type":"application/json"}', 1, 'POST', 1, '2023-01-01 09:00:00', '2023-01-01 09:00:00', 0),
-('获取用户信息', '根据用户ID查询详细信息', '/api/user/get', '{"Authorization":"Bearer token"}', '{"Content-Type":"application/json"}', 1, 'GET', 1, '2023-01-02 10:00:00', '2023-01-02 10:00:00', 0),
-('创建订单', '提交商品生成新订单', '/api/order/create', '{"Content-Type":"application/json","Authorization":"Bearer token"}', '{"Content-Type":"application/json"}', 1, 'POST', 2, '2023-01-03 11:00:00', '2023-01-03 11:00:00', 0),
-('支付接口', '调用第三方支付平台', '/api/pay/request', '{"Content-Type":"application/x-www-form-urlencoded"}', '{"Content-Type":"text/html"}', 1, 'POST', 3, '2023-01-04 12:00:00', '2023-01-04 12:00:00', 0),
-('商品列表', '分页查询商品数据', '/api/product/list', '{"Content-Type":"application/json"}', '{"Content-Type":"application/json"}', 1, 'GET', 2, '2023-01-05 13:00:00', '2023-01-05 13:00:00', 0),
+INSERT INTO `interface_info` (`name`, `description`, `url`, `requestHeader`, `responseHeader`, `requestParams`, `responseParams`, `status`, `method`, `userId`) VALUES
+-- 1. 用户服务接口
+('用户登录', '通过用户名密码登录获取token', '/api/user/login', '{"Content-Type":"application/json"}', '{"Content-Type":"application/json"}', '{"username":"admin","password":"123456"}', '{"code":200,"data":{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"},"message":"success"}', 1, 'POST', 1),
 
--- 关闭状态的接口 (status=0)
-('旧版登录接口', '已废弃的MD5加密登录', '/api/v1/login', '{"Content-Type":"application/json"}', '{"Content-Type":"application/json"}', 0, 'POST', 5, '2022-12-01 14:00:00', '2023-01-10 14:30:00', 0),
-('短信发送', '运营商维护暂停服务', '/api/sms/send', '{"Content-Type":"application/json"}', '{"Content-Type":"application/json"}', 0, 'POST', 4, '2023-01-06 15:00:00', '2023-01-08 09:00:00', 0),
-('文件上传', '系统升级临时关闭', '/api/file/upload', '{"Content-Type":"multipart/form-data"}', '{"Content-Type":"application/json"}', 0, 'PUT', 3, '2023-01-07 16:00:00', '2023-01-09 10:00:00', 0),
+-- 2. 用户信息接口
+('获取用户信息', '根据用户ID获取用户详细信息', '/api/user/info', '{"Content-Type":"application/json","Authorization":"Bearer {token}"}', '{"Content-Type":"application/json"}', '{"userId":123}', '{"code":200,"data":{"userId":123,"username":"admin","email":"admin@example.com"},"message":"success"}', 1, 'GET', 1),
 
--- 不同请求方法的接口
-('删除用户', '根据ID逻辑删除用户', '/api/user/delete', '{"Authorization":"Bearer token"}', '{"Content-Type":"application/json"}', 1, 'DELETE', 1, '2023-01-08 17:00:00', '2023-01-08 17:00:00', 0),
-('更新商品', '修改商品信息', '/api/product/update', '{"Content-Type":"application/json","Authorization":"Bearer token"}', '{"Content-Type":"application/json"}', 1, 'PUT', 2, '2023-01-09 18:00:00', '2023-01-09 18:00:00', 0),
+-- 3-5. 支付相关接口
+('创建支付订单', '创建新的支付订单', '/api/payment/create', '{"Content-Type":"application/json"}', '{"Content-Type":"application/json"}', '{"orderId":"ORD123456","amount":100.00,"currency":"CNY"}', '{"code":200,"data":{"paymentId":"PAY789012","status":"pending"},"message":"success"}', 1, 'POST', 2),
+('查询支付状态', '查询支付订单状态', '/api/payment/status', '{"Content-Type":"application/json"}', '{"Content-Type":"application/json"}', '{"paymentId":"PAY789012"}', '{"code":200,"data":{"status":"completed","amount":100.00},"message":"success"}', 1, 'GET', 2),
+('退款接口', '对已支付订单发起退款', '/api/payment/refund', '{"Content-Type":"application/json"}', '{"Content-Type":"application/json"}', '{"paymentId":"PAY789012","refundAmount":50.00}', '{"code":200,"data":{"refundId":"REF654321","status":"processing"},"message":"success"}', 1, 'POST', 2),
 
--- 特殊Header的接口
-('微信回调', '处理微信支付回调', '/api/wechat/notify', '{"Content-Type":"text/xml"}', '{"Content-Type":"text/xml"}', 1, 'POST', 5, '2023-01-10 19:00:00', '2023-01-10 19:00:00', 0),
-('文件下载', '通过文件ID下载资源', '/api/file/download', '{"Accept":"application/octet-stream"}', '{"Content-Type":"application/octet-stream"}', 1, 'GET', 4, '2023-01-11 20:00:00', '2023-01-11 20:00:00', 0),
+-- 6-8. 商品服务接口
+('获取商品列表', '分页获取商品列表', '/api/product/list', '{"Content-Type":"application/json"}', '{"Content-Type":"application/json"}', '{"page":1,"pageSize":10,"categoryId":5}', '{"code":200,"data":{"list":[{"id":1,"name":"商品1"},{"id":2,"name":"商品2"}],"total":100},"message":"success"}', 1, 'GET', 3),
+('获取商品详情', '根据商品ID获取商品详情', '/api/product/detail', '{"Content-Type":"application/json"}', '{"Content-Type":"application/json"}', '{"productId":123}', '{"code":200,"data":{"id":123,"name":"示例商品","price":99.99,"stock":50},"message":"success"}', 1, 'GET', 3),
+('创建商品', '创建新的商品', '/api/product/create', '{"Content-Type":"application/json","Authorization":"Bearer {token}"}', '{"Content-Type":"application/json"}', '{"name":"新商品","price":199.99,"stock":100}', '{"code":200,"data":{"productId":124},"message":"success"}', 1, 'POST', 3),
 
--- 不同用户的创建记录
-('权限列表', '获取所有权限节点', '/api/permission/list', '{"Authorization":"Bearer token"}', '{"Content-Type":"application/json"}', 1, 'GET', 10, '2023-01-12 21:00:00', '2023-01-12 21:00:00', 0),
-('角色分配', '给用户分配角色', '/api/role/assign', '{"Content-Type":"application/json","Authorization":"Bearer token"}', '{"Content-Type":"application/json"}', 1, 'POST', 8, '2023-01-13 22:00:00', '2023-01-13 22:00:00', 0),
+-- 9-11. 订单服务接口
+('创建订单', '创建新的订单', '/api/order/create', '{"Content-Type":"application/json","Authorization":"Bearer {token}"}', '{"Content-Type":"application/json"}', '{"products":[{"id":1,"quantity":2},{"id":2,"quantity":1}]}', '{"code":200,"data":{"orderId":"ORD654321","totalAmount":299.97},"message":"success"}', 1, 'POST', 4),
+('查询订单', '根据订单ID查询订单详情', '/api/order/detail', '{"Content-Type":"application/json"}', '{"Content-Type":"application/json"}', '{"orderId":"ORD654321"}', '{"code":200,"data":{"orderId":"ORD654321","status":"paid","products":[{"id":1,"quantity":2}]},"message":"success"}', 1, 'GET', 4),
+('取消订单', '取消未支付的订单', '/api/order/cancel', '{"Content-Type":"application/json","Authorization":"Bearer {token}"}', '{"Content-Type":"application/json"}', '{"orderId":"ORD654321"}', '{"code":200,"data":{"orderId":"ORD654321","status":"cancelled"},"message":"success"}', 1, 'POST', 4),
 
--- 已删除的接口 (isDelete=1)
-('测试接口1', '已删除的测试接口', '/api/test/1', '{"Content-Type":"application/json"}', '{"Content-Type":"application/json"}', 0, 'GET', 1, '2022-11-01 08:00:00', '2022-12-01 08:00:00', 1),
-('测试接口2', '压力测试专用接口', '/api/stress/test', '{"Content-Type":"application/json"}', '{"Content-Type":"application/json"}', 0, 'POST', 2, '2022-11-05 09:00:00', '2022-12-05 09:00:00', 1),
+-- 12-14. 短信服务接口
+('发送短信验证码', '发送短信验证码到指定手机号', '/api/sms/send', '{"Content-Type":"application/json"}', '{"Content-Type":"application/json"}', '{"phone":"13800138000","templateId":"VERIFY"}', '{"code":200,"data":{"smsId":"SMS123456"},"message":"success"}', 1, 'POST', 5),
+('验证短信验证码', '验证短信验证码是否正确', '/api/sms/verify', '{"Content-Type":"application/json"}', '{"Content-Type":"application/json"}', '{"phone":"13800138000","code":"123456"}', '{"code":200,"data":{"verified":true},"message":"success"}', 1, 'POST', 5),
+('查询短信发送记录', '查询短信发送历史记录', '/api/sms/history', '{"Content-Type":"application/json","Authorization":"Bearer {token}"}', '{"Content-Type":"application/json"}', '{"phone":"13800138000","page":1,"pageSize":10}', '{"code":200,"data":{"list":[{"smsId":"SMS123456","status":"delivered"}]},"message":"success"}', 1, 'GET', 5),
 
--- 混合场景
-('天气查询', '查询城市天气信息', '/api/weather', '{"Content-Type":"application/json"}', '{"Content-Type":"application/json"}', 1, 'GET', 7, '2023-01-14 23:00:00', '2023-01-14 23:00:00', 0),
-('IP定位', '根据IP获取地理位置', '/api/location/ip', '{"Content-Type":"application/json"}', '{"Content-Type":"application/json"}', 1, 'POST', 6, '2023-01-15 00:00:00', '2023-01-15 00:00:00', 0),
-('验证码生成', '生成图形验证码', '/api/captcha', '{"Content-Type":"application/json"}', '{"Content-Type":"image/png"}', 1, 'GET', 5, '2023-01-16 01:00:00', '2023-01-16 01:00:00', 0),
-('数据统计', '获取系统运行指标', '/api/metrics', '{"Authorization":"Bearer token"}', '{"Content-Type":"application/json"}', 1, 'GET', 9, '2023-01-17 02:00:00', '2023-01-17 02:00:00', 0);
+-- 15-17. 文件服务接口
+('文件上传', '上传文件到服务器', '/api/file/upload', '{"Content-Type":"multipart/form-data"}', '{"Content-Type":"application/json"}', 'FormData: file=@example.jpg', '{"code":200,"data":{"fileId":"FILE789012","url":"https://example.com/files/example.jpg"},"message":"success"}', 1, 'POST', 6),
+('文件下载', '根据文件ID下载文件', '/api/file/download', '{"Content-Type":"application/json"}', '{"Content-Type":"application/octet-stream"}', '{"fileId":"FILE789012"}', 'Binary file data', 1, 'GET', 6),
+('文件删除', '删除服务器上的文件', '/api/file/delete', '{"Content-Type":"application/json","Authorization":"Bearer {token}"}', '{"Content-Type":"application/json"}', '{"fileId":"FILE789012"}', '{"code":200,"data":{"deleted":true},"message":"success"}', 1, 'POST', 6),
 
+-- 18-20. 其他服务接口
+('获取系统时间', '获取服务器当前时间', '/api/system/time', '{"Content-Type":"application/json"}', '{"Content-Type":"application/json"}', '{}', '{"code":200,"data":{"timestamp":1630000000,"datetime":"2023-08-27 12:00:00"},"message":"success"}', 1, 'GET', 7),
+('获取服务器状态', '获取服务器运行状态信息', '/api/system/status', '{"Content-Type":"application/json"}', '{"Content-Type":"application/json"}', '{}', '{"code":200,"data":{"cpu":30,"memory":45,"disk":60},"message":"success"}', 1, 'GET', 7),
+('批量操作接口', '批量执行多个操作', '/api/batch/execute', '{"Content-Type":"application/json","Authorization":"Bearer {token}"}', '{"Content-Type":"application/json"}', '{"operations":[{"type":"create","data":{"name":"test"}}]}', '{"code":200,"data":{"results":[{"success":true}]},"message":"success"}', 1, 'POST', 7);

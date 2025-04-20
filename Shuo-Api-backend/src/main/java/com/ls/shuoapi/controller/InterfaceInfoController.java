@@ -43,7 +43,8 @@ public class InterfaceInfoController {
     @Resource
     private UserService userService;
 
-    @Resource private ShuoApiClient shuoApiClient;
+    @Resource
+    private ShuoApiClient shuoApiClient;
 
     // region 增删改查
 
@@ -56,7 +57,7 @@ public class InterfaceInfoController {
      */
     @PostMapping("/add")
     public BaseResponse<Long> addInterfaceInfo(@RequestBody InterfaceInfoAddRequest interfaceInfoAddRequest, HttpServletRequest request) {
-       //逻辑校验
+        //逻辑校验
         if (interfaceInfoAddRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -69,7 +70,7 @@ public class InterfaceInfoController {
 
         User loginUser = userService.getLoginUser(request);
         interfaceInfo.setUserId(loginUser.getId());
- 
+
         boolean result = interfaceInfoService.save(interfaceInfo);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         long newInterfaceInfoId = interfaceInfo.getId();
@@ -78,6 +79,7 @@ public class InterfaceInfoController {
 
     /**
      * 删除
+     *
      * @param deleteRequest
      * @param request
      * @return
@@ -105,6 +107,7 @@ public class InterfaceInfoController {
 
     /**
      * 更新（仅管理员） - 修改接口信息， 下线接口， 发布接口信息
+     *
      * @param interfaceInfoUpdateRequest
      * @return
      */
@@ -129,11 +132,11 @@ public class InterfaceInfoController {
         // 如果是正常修改接口的信息，或者就是下线
 
         // 如果是发布 state = 1
-        if (status == 1){
+        if (status == 1) {
 
             // 该接口是否正常使用 todo 根据接口的uri，来测试远程调用哪一个接口
             String userByJson = shuoApiClient.getUserByJson(new com.ls.shuoapiclientsdk.model.User("hnsqls", "hello"));
-            if (StringUtils.isBlank(userByJson)){
+            if (StringUtils.isBlank(userByJson)) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口调用失败");
             }
 
@@ -189,26 +192,30 @@ public class InterfaceInfoController {
 
         // 构造查询条件
         QueryWrapper<InterfaceInfo> queryWrapper = new QueryWrapper<>();
-        
+
         // 精确查询条件
         queryWrapper.lambda()
-            .eq(interfaceInfoQueryRequest.getId() != null, InterfaceInfo::getId, interfaceInfoQueryRequest.getId())
-            .eq(interfaceInfoQueryRequest.getStatus() != null, InterfaceInfo::getStatus, interfaceInfoQueryRequest.getStatus())
-            .eq(StringUtils.isNotBlank(interfaceInfoQueryRequest.getMethod()), InterfaceInfo::getMethod, interfaceInfoQueryRequest.getMethod())
-            .eq(interfaceInfoQueryRequest.getUserId() != null, InterfaceInfo::getUserId, interfaceInfoQueryRequest.getUserId());
-            
+                .eq(interfaceInfoQueryRequest.getId() != null, InterfaceInfo::getId, interfaceInfoQueryRequest.getId())
+                .eq(interfaceInfoQueryRequest.getStatus() != null, InterfaceInfo::getStatus, interfaceInfoQueryRequest.getStatus())
+                .eq(StringUtils.isNotBlank(interfaceInfoQueryRequest.getMethod()), InterfaceInfo::getMethod, interfaceInfoQueryRequest.getMethod())
+                .eq(interfaceInfoQueryRequest.getUserId() != null, InterfaceInfo::getUserId, interfaceInfoQueryRequest.getUserId())
+                .eq(StringUtils.isNotBlank(interfaceInfoQueryRequest.getRequestHeader()), InterfaceInfo::getRequestHeader, interfaceInfoQueryRequest.getRequestHeader())
+                .eq(StringUtils.isNotBlank(interfaceInfoQueryRequest.getResponseHeader()), InterfaceInfo::getResponseHeader, interfaceInfoQueryRequest.getResponseHeader())
+                .eq(StringUtils.isNotBlank(interfaceInfoQueryRequest.getRequestParams()), InterfaceInfo::getRequestParams, interfaceInfoQueryRequest.getRequestParams())
+                .eq(StringUtils.isNotBlank(interfaceInfoQueryRequest.getResponseParams()), InterfaceInfo::getResponseParams, interfaceInfoQueryRequest.getResponseParams());
+
         // 模糊查询条件
         queryWrapper.lambda()
-            .like(StringUtils.isNotBlank(interfaceInfoQueryRequest.getName()), InterfaceInfo::getName, interfaceInfoQueryRequest.getName())
-            .like(StringUtils.isNotBlank(interfaceInfoQueryRequest.getDescription()), InterfaceInfo::getDescription, interfaceInfoQueryRequest.getDescription())
-            .like(StringUtils.isNotBlank(interfaceInfoQueryRequest.getUrl()), InterfaceInfo::getUrl, interfaceInfoQueryRequest.getUrl());
-        
+                .like(StringUtils.isNotBlank(interfaceInfoQueryRequest.getName()), InterfaceInfo::getName, interfaceInfoQueryRequest.getName())
+                .like(StringUtils.isNotBlank(interfaceInfoQueryRequest.getDescription()), InterfaceInfo::getDescription, interfaceInfoQueryRequest.getDescription())
+                .like(StringUtils.isNotBlank(interfaceInfoQueryRequest.getUrl()), InterfaceInfo::getUrl, interfaceInfoQueryRequest.getUrl());
+
         // 排序条件
         if (StringUtils.isNotBlank(interfaceInfoQueryRequest.getSortField())) {
             boolean isAsc = "asc".equalsIgnoreCase(interfaceInfoQueryRequest.getSortOrder());
             queryWrapper.orderBy(true, isAsc, interfaceInfoQueryRequest.getSortField());
         }
-        
+
         // 执行分页查询
         Page<InterfaceInfo> interfaceInfoPage = interfaceInfoService.page(new Page<>(current, size), queryWrapper);
         return ResultUtils.success(interfaceInfoPage);
@@ -259,8 +266,6 @@ public class InterfaceInfoController {
 //    }
 
     // endregion
-
-
 
 
 }
