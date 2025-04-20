@@ -22,15 +22,32 @@ const InterfaceInfoDetail: React.FC = () => {
       getInterfaceInfoVoByIdUsingGet({ id })
         .then(res => {
           setInfo(res?.data);
-          // 初始化参数表格
-          const reqParams = res?.data?.requestParams || [];
-          setParamsTable(
-            reqParams.map((p: any, idx: number) => ({
+          // 兼容 requestParams 为字符串或对象
+          let reqParams: any = res?.data?.requestParams || [];
+          if (typeof reqParams === 'string') {
+            try {
+              reqParams = JSON.parse(reqParams);
+            } catch {
+              reqParams = [];
+            }
+          }
+          // 如果是对象（如 {username: "admin", password: "123456"}），转成数组
+          if (!Array.isArray(reqParams) && typeof reqParams === 'object' && reqParams !== null) {
+            reqParams = Object.entries(reqParams).map(([key, value], idx) => ({
+              key: String(idx),
+              name: key,
+              value: value,
+            }));
+          } else if (Array.isArray(reqParams)) {
+            reqParams = reqParams.map((p: any, idx: number) => ({
               key: String(idx),
               name: p.name,
               value: '',
-            }))
-          );
+            }));
+          } else {
+            reqParams = [];
+          }
+          setParamsTable(reqParams);
           setMethod(res?.data?.method || 'GET'); // 动态设置method
           setUrl(res?.data?.url || '');          // 动态设置url
         })
@@ -73,14 +90,54 @@ const InterfaceInfoDetail: React.FC = () => {
   if (!info) return <div style={{ padding: 24 }}>未找到接口信息</div>;
 
   // 示例参数和返回值结构
-  const requestParams = info.requestParams || [
-    { name: 'text', type: 'string', required: '是', desc: '内容' },
-  ];
-  const responseParams = info.responseParams || [
-    { name: 'code', type: 'int', desc: '状态码' },
-    { name: 'data', type: 'object', desc: '返回数据' },
-    { name: 'message', type: 'string', desc: '提示信息' },
-  ];
+  let requestParams: any[] = [];
+  let responseParams: any[] = [];
+  let responseExample: any = {};
+  try {
+    let parsed = info.requestParams
+      ? (typeof info.requestParams === 'string'
+          ? JSON.parse(info.requestParams)
+          : info.requestParams)
+      : [
+          { name: 'text', type: 'string', required: '是', desc: '内容' },
+        ];
+    // 如果是对象（不是数组），转成数组
+    requestParams = Array.isArray(parsed)
+      ? parsed
+      : Object.entries(parsed).map(([key, value]) => ({
+          name: key,
+          value: value,
+          type: typeof value,
+          required: '',
+          desc: ''
+        }));
+  } catch {
+    requestParams = [];
+  }
+  try {
+    let parsed = info.responseParams
+      ? (typeof info.responseParams === 'string'
+          ? JSON.parse(info.responseParams)
+          : info.responseParams)
+      : {
+          code: 0,
+          data: { value: '示例返回内容' },
+          message: '返回的提示信息'
+        };
+    // 如果是对象（不是数组），转成数组
+    responseParams = Array.isArray(parsed)
+      ? parsed
+      : Object.entries(parsed).map(([key, value]) => ({
+          name: key,
+          value: value,
+          type: typeof value,
+          desc: ''
+        }));
+    responseExample = parsed;
+  } catch {
+    responseParams = [];
+    responseExample = {};
+  }
 
   // 在线调试提交
   const handleTest = async () => {
@@ -161,14 +218,21 @@ const InterfaceInfoDetail: React.FC = () => {
                 { title: '描述', dataIndex: 'desc', key: 'desc' },
               ]}
             />
-            <Title level={5} style={{ marginTop: 24 }}>返回示例：</Title>
+            {/* 新增请求示例 */}
+            <Title level={5} style={{ marginTop: 24 }}>请求示例：</Title>
             <pre style={{ background: '#f6f8fa', padding: 16, borderRadius: 6 }}>
-{JSON.stringify(info.responseExample || {
-  code: 0,
-  data: { value: '示例返回内容' },
-  message: '返回的提示信息'
-}, null, 2)}
-            </pre>
+        {JSON.stringify(
+          typeof info.requestParams === 'string'
+            ? JSON.parse(info.requestParams)
+            : info.requestParams,
+          null,
+          2
+        )}
+          </pre>
+          <Title level={5} style={{ marginTop: 24 }}>返回示例：</Title>
+          <pre style={{ background: '#f6f8fa', padding: 16, borderRadius: 6 }}>
+        {JSON.stringify(responseExample, null, 2)}
+          </pre>
           </Tabs.TabPane>
           <Tabs.TabPane tab="在线调试工具" key="test">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>

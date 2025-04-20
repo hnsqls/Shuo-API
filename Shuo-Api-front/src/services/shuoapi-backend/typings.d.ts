@@ -126,7 +126,9 @@ declare namespace API {
     method?: string;
     name?: string;
     requestHeader?: string;
+    requestParams?: string;
     responseHeader?: string;
+    responseParams?: string;
     status?: number;
     updateTime?: string;
     url?: string;
@@ -138,7 +140,9 @@ declare namespace API {
     method?: string;
     name?: string;
     requestHeader?: string;
+    requestParams?: string;
     responseHeader?: string;
+    responseParams?: string;
     url?: string;
   };
 
@@ -150,7 +154,9 @@ declare namespace API {
     name?: string;
     pageSize?: number;
     requestHeader?: string;
+    requestParams?: string;
     responseHeader?: string;
+    responseParams?: string;
     sortField?: string;
     sortOrder?: string;
     status?: number;
@@ -164,7 +170,9 @@ declare namespace API {
     method?: string;
     name?: string;
     requestHeader?: string;
+    requestParams?: string;
     responseHeader?: string;
+    responseParams?: string;
     status?: number;
     url?: string;
   };
