@@ -7,3 +7,16 @@ shuo:
   api:
     access-key: hnsqls
     secret-key: hnsqls
+
+
+# 接口文档配置
+knife4j:
+  enable: true
+  openapi:
+    title: "接口文档"
+    version: 1.0
+    group:
+      default:
+        api-rule: package
+        api-rule-resources:
+          - com.ls.shuoapiinterface.controller

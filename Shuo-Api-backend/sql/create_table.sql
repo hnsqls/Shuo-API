@@ -33,6 +33,8 @@ create table if not exists `interface_info`
     `url` varchar(512) not null comment '接口地址',
     `requestHeader` text null comment '请求头',
     `responseHeader` text null comment '响应头',
+    `requestParams` text NULL COMMENT '请求参数示例',
+    `responseParams` text NULL COMMENT '响应参数示例',
     `status` int default 0 not null comment '接口状态（0-关闭，1-开启）',
     `method` varchar(256) not null comment '请求类型',
     `userId` bigint not null comment '创建人',
